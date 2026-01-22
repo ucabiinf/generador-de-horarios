@@ -1,0 +1,11 @@
+ID;CARRERA_CODIGO;CARRERA_NOMBRE;PERIODO;CODIGO_MATERIA;NOMBRE_MATERIA;CREDITOS;CEDULA;NOMBRE_ESTUDIANTE;PROMEDIO;CREDITOS_ACUMULADOS;SEMESTRE;ESTADO
+1;LICINFORM001;Ingeniería Informática;2024-1;INFO-00192;Pasantía;6;17051235;Carlos Mendoza;3.85;85;8;Activo
+2;LICINFORM001;Ingeniería Informática;2024-1;INFO-00156;Programación Avanzada;4;17051235;Carlos Mendoza;3.85;85;8;Activo
+3;LICINFORM001;Ingeniería Informática;2024-1;FING-02001;Cálculo Diferencial;3;17051235;Carlos Mendoza;3.85;85;8;Activo
+4;LICINFORM001;Ingeniería Informática;2024-1;FING-02002;Física General;4;17051235;Carlos Mendoza;3.85;85;8;Activo
+5;LICINFORM001;Ingeniería Informática;2024-1;INFO-00192;Pasantía;6;20098765;María García;3.42;62;6;Activo
+6;LICINFORM001;Ingeniería Informática;2024-1;INFO-00156;Programación Avanzada;4;20098765;María García;3.42;62;6;Activo
+7;LICINFORM001;Ingeniería Informática;2024-1;FING-02003;Estadística;3;20098765;María García;3.42;62;6;Activo
+8;LICINFORM001;Ingeniería Informática;2024-1;INFO-00145;Base de Datos;4;12345678;Juan Pérez;2.95;45;4;Activo
+9;LICINFORM001;Ingeniería Informática;2024-1;INFO-00156;Programación Avanzada;4;12345678;Juan Pérez;2.95;45;4;Activo
+10;LICINFORM001;Ingeniería Informática;2024-1;FING-02001;Cálculo Diferencial;3;12345678;Juan Pérez;2.95;45;4;Activo
