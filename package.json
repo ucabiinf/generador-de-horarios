@@ -17,6 +17,7 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@sveltejs/adapter-vercel": "^6.3.0",
     "papaparse": "^5.5.3"
   }
 }
