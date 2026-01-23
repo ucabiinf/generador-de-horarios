@@ -176,56 +176,122 @@
             <div class="bg-dark-800 rounded-xl border border-dark-600 overflow-hidden">
               <!-- Subject Header -->
               <div 
-                class="p-4 flex items-center gap-4 cursor-pointer hover:bg-dark-700 transition-colors"
+                class="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-dark-700 transition-colors"
                 onclick={() => toggleSubjectExpand(subject.subjectId)}
               >
                 <!-- Icon -->
-                <div class="w-10 h-10 rounded-xl bg-accent-blue/20 flex items-center justify-center text-lg">
+                <div class="w-10 h-10 rounded-xl bg-accent-blue/20 flex items-center justify-center text-lg flex-shrink-0">
                   {getSubjectIcon(subject.subjectId)}
                 </div>
                 
                 <!-- Subject Name & Code -->
-                <div class="flex-1">
-                  <div class="flex items-center gap-2 mb-0.5">
-                    <div class="font-semibold text-lg leading-tight">{subject.subjectName}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-0.5">
+                    <div class="font-semibold text-base sm:text-lg leading-tight">{subject.subjectName}</div>
                     <span class="px-2 py-0.5 bg-accent-blue/10 text-accent-blue border border-accent-blue/20 rounded text-[10px] font-bold uppercase">
                       Sem {subject.semester}
                     </span>
                   </div>
-                  <div class="text-sm text-gray-500">{subject.credits || 0} Créditos • {subject.subjectId}</div>
+                  <div class="text-xs sm:text-sm text-gray-500">{subject.credits || 0} Créditos • {subject.subjectId}</div>
                 </div>
                 
-                <!-- Selection checkbox -->
-                <label class="flex items-center gap-2" onclick={(e) => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selectedSubjectIds.has(subject.subjectId)}
-                    onchange={() => toggleSubjectSelection(subject)}
-                    class="custom-checkbox"
-                  />
-                </label>
-                
-                <!-- Sections count -->
-                <div class="flex items-center gap-2">
-                  <span class="text-sm bg-dark-600 px-2 py-1 rounded">{subject.totalSections} Secciones</span>
-                  <svg 
-                    class="w-5 h-5 transition-transform {expandedSubjects.has(subject.subjectId) ? 'rotate-180' : ''}" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                  </svg>
+                <!-- Selection checkbox & sections count -->
+                <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                  <label class="flex items-center gap-2" onclick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSubjectIds.has(subject.subjectId)}
+                      onchange={() => toggleSubjectSelection(subject)}
+                      class="custom-checkbox"
+                    />
+                  </label>
+                  
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs sm:text-sm bg-dark-600 px-2 py-1 rounded">{subject.totalSections} Secciones</span>
+                    <svg 
+                      class="w-5 h-5 transition-transform {expandedSubjects.has(subject.subjectId) ? 'rotate-180' : ''}" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                  </div>
                 </div>
               </div>
               
               <!-- Sections List (Expanded) -->
               {#if expandedSubjects.has(subject.subjectId)}
-                <div class="border-t border-dark-600">
+                <!-- Mobile Card View -->
+                <div class="border-t border-dark-600 sm:hidden">
+                  <div class="p-2 space-y-2">
+                    {#each subject.sections as section}
+                      <div 
+                        class="p-3 rounded-lg border transition-colors cursor-pointer
+                          {isSectionSelected(section.nrc) 
+                            ? 'bg-accent-blue/20 border-accent-blue/50' 
+                            : 'bg-dark-700 border-dark-600 hover:border-dark-500'}"
+                        onclick={() => toggleSectionSelection(section, subject)}
+                      >
+                        <div class="flex items-start justify-between gap-3">
+                          <div class="flex-1 min-w-0">
+                            <!-- NRC and Availability -->
+                            <div class="flex items-center gap-2 mb-2">
+                              <span class="font-mono font-bold text-accent-blue">{section.nrc}</span>
+                              {#if section.hasAvailability}
+                                {#if section.disponibles > 5}
+                                  <span class="badge-open text-[10px]">{section.disponibles} cupos</span>
+                                {:else}
+                                  <span class="badge-limited text-[10px]">{section.disponibles} cupos</span>
+                                {/if}
+                              {:else}
+                                <span class="badge-full text-[10px]">Lleno</span>
+                              {/if}
+                            </div>
+                            
+                            <!-- Professor -->
+                            <div class="flex items-center gap-2 mb-2">
+                              <div class="w-6 h-6 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-[10px] font-medium flex-shrink-0">
+                                {section.profesor ? section.profesor.charAt(0) : '?'}
+                              </div>
+                              <span class="text-sm text-gray-300 truncate">{section.profesor || 'Por asignar'}</span>
+                            </div>
+                            
+                            <!-- Schedule -->
+                            <div class="flex flex-wrap gap-1">
+                              {#each formatSchedule(section.schedule) as slot}
+                                <span class="text-xs bg-dark-600 px-2 py-0.5 rounded">
+                                  <span class="text-accent-cyan font-medium">{slot.days.join('/')}</span>
+                                  <span class="text-gray-400 ml-1">{slot.time}</span>
+                                </span>
+                              {/each}
+                            </div>
+                          </div>
+                          
+                          <!-- Selection indicator -->
+                          <div class="flex-shrink-0 mt-1">
+                            {#if isSectionSelected(section.nrc)}
+                              <div class="w-6 h-6 rounded-full bg-accent-blue flex items-center justify-center">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                              </div>
+                            {:else}
+                              <div class="w-6 h-6 rounded-full border-2 border-dark-500"></div>
+                            {/if}
+                          </div>
+                        </div>
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+                
+                <!-- Desktop Table View -->
+                <div class="border-t border-dark-600 hidden sm:block overflow-x-auto">
                   <table class="w-full">
                     <thead class="bg-dark-700">
                       <tr class="text-xs text-gray-400 uppercase">
-                        <th class="p-3 text-left w-16">Selec.</th>
+                        <th class="p-3 text-left w-16">Sel.</th>
                         <th class="p-3 text-left">NRC</th>
                         <th class="p-3 text-left">Profesor</th>
                         <th class="p-3 text-left">Horario</th>
@@ -247,11 +313,11 @@
                             />
                           </td>
                           <td class="p-3">
-                            <span class="font-mono font-medium">{section.nrc}</span>
+                            <span class="font-mono font-medium text-sm">{section.nrc}</span>
                           </td>
                           <td class="p-3">
                             <div class="flex items-center gap-2">
-                              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-xs font-medium">
+                              <div class="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-xs font-medium flex-shrink-0">
                                 {section.profesor ? section.profesor.charAt(0) : '?'}
                               </div>
                               <span class="text-sm">{section.profesor || 'Por asignar'}</span>
@@ -260,20 +326,20 @@
                           <td class="p-3">
                             {#each formatSchedule(section.schedule) as slot}
                               <div class="flex items-center gap-2 text-sm">
-                                <span class="font-medium text-accent-cyan">{slot.days.join(' / ')}</span>
-                                <span class="text-gray-400">{slot.time}</span>
+                                <span class="font-medium text-accent-cyan">{slot.days.join('/')}</span>
+                                <span class="text-gray-400 whitespace-nowrap">{slot.time}</span>
                               </div>
                             {/each}
                           </td>
                           <td class="p-3 text-right">
                             {#if section.hasAvailability}
                               {#if section.disponibles > 5}
-                                <span class="badge-open">{section.disponibles} / {section.cupo} Abierto</span>
+                                <span class="badge-open">{section.disponibles}/{section.cupo}</span>
                               {:else}
-                                <span class="badge-limited">{section.disponibles} / {section.cupo} Limitado</span>
+                                <span class="badge-limited">{section.disponibles}/{section.cupo}</span>
                               {/if}
                             {:else}
-                              <span class="badge-full">{section.inscritos} / {section.cupo} Lleno</span>
+                              <span class="badge-full">{section.inscritos}/{section.cupo}</span>
                             {/if}
                           </td>
                         </tr>

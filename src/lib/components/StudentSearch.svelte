@@ -225,20 +225,20 @@
   
   {#if searchResult}
     <div class="mt-4 p-4 bg-dark-700 rounded-xl border border-dark-500">
-      <div class="flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-xl font-bold">
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
           {searchResult.name.charAt(0)}
         </div>
-        <div class="flex-1">
-          <div class="flex items-center gap-2">
-            <span class="text-lg font-semibold">{searchResult.name}</span>
+        <div class="flex-1 text-center sm:text-left">
+          <div class="flex flex-col sm:flex-row items-center gap-2">
+            <span class="text-base sm:text-lg font-semibold">{searchResult.name}</span>
             <span class="badge-open">{searchResult.status}</span>
           </div>
-          <p class="text-gray-400">Cédula: {searchResult.studentId}</p>
+          <p class="text-gray-400 text-sm">Cédula: {searchResult.studentId}</p>
         </div>
-        <div class="text-right">
-          <div class="text-2xl font-bold text-accent-cyan">{searchResult.subjects.length}</div>
-          <div class="text-sm text-gray-400">Materias disponibles</div>
+        <div class="text-center sm:text-right">
+          <div class="text-xl sm:text-2xl font-bold text-accent-cyan">{searchResult.subjects.length}</div>
+          <div class="text-xs sm:text-sm text-gray-400">Materias disponibles</div>
         </div>
       </div>
     </div>

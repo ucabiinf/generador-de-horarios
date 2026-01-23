@@ -80,3 +80,32 @@
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-dark-600;
 }
+
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  
+  /* Improve touch targets for buttons only */
+  button:not(.checkbox-btn), 
+  a {
+    min-height: 44px;
+  }
+}
+
+
+/* Safe area for notch devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Prevent horizontal scroll on body */
+html, body {
+  overflow-x: hidden;
+}
