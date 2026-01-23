@@ -43,6 +43,24 @@
   .badge-limited {
     @apply bg-yellow-500/20 text-yellow-400 text-xs font-medium px-2.5 py-1 rounded-full;
   }
+
+  .custom-checkbox {
+    @apply appearance-none w-5 h-5 rounded-lg border-2 border-dark-500 bg-dark-700 cursor-pointer relative transition-all duration-300 hover:border-accent-blue/50 focus:outline-none focus:ring-2 focus:ring-accent-blue/20 checked:bg-accent-blue checked:border-accent-blue;
+  }
+  
+  .custom-checkbox:checked::after {
+    content: '';
+    @apply absolute left-1.5 top-0.5 w-1.5 h-2.5 border-r-2 border-b-2 border-white rotate-45;
+  }
+
+  .custom-checkbox-sm {
+    @apply appearance-none w-4 h-4 rounded-md border-2 border-dark-500 bg-dark-700 cursor-pointer relative transition-all duration-300 hover:border-accent-blue/50 focus:outline-none checked:bg-accent-blue checked:border-accent-blue;
+  }
+
+  .custom-checkbox-sm:checked::after {
+    content: '';
+    @apply absolute left-1 top-0 w-1 h-2 border-r-2 border-b-2 border-white rotate-45;
+  }
 }
 
 /* Custom scrollbar */

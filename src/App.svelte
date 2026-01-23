@@ -1,19 +1,14 @@
 <script>
-  import FileUploader from './lib/components/FileUploader.svelte';
   import StudentSearch from './lib/components/StudentSearch.svelte';
   import SubjectSelector from './lib/components/SubjectSelector.svelte';
   import ScheduleCarousel from './lib/components/ScheduleCarousel.svelte';
-  import { groupSectionsBySubject } from './lib/csvParser.js';
   import { generateSchedules, estimateCombinations, sortSchedules } from './lib/scheduleGenerator.js';
   
   // Step management
-  let currentStep = $state(1); // 1: Upload & Search, 2: Selection, 3: Results
+  let currentStep = $state(1); // 1: Search, 2: Selection, 3: Results
   
   // Global state using Svelte 5 Runes
-  let projections = $state([]);
   let allSections = $state([]);
-  let projectionsStatus = $state('idle');
-  let sectionsStatus = $state('idle');
   
   let selectedStudent = $state(null);
   let selectedSections = $state([]);
@@ -24,9 +19,8 @@
   let generationWarning = $state('');
   let generationError = $state('');
   
-  // Derived states
-  let dataLoaded = $derived(projectionsStatus === 'success' && sectionsStatus === 'success');
-  let canProceedToStep2 = $derived(dataLoaded && selectedStudent !== null);
+  // Derived states - dataLoaded is true when student is found (API handles data loading)
+  let canProceedToStep2 = $derived(selectedStudent !== null);
   let canProceedToStep3 = $derived(selectedSections.length > 0);
   
   // Calculate total credits from selected sections
@@ -68,10 +62,12 @@
     for (const section of selectedSections) {
       if (!seen.has(section.subjectId)) {
         seen.add(section.subjectId);
-        const subject = selectedStudent.subjects.find(s => s.subjectId === section.subjectId);
-        if (subject) {
+        const studentSubj = selectedStudent.subjects.find(s => s.subjectId === section.subjectId);
+        if (studentSubj || section.subjectName) {
           result.push({
-            ...subject,
+            subjectId: section.subjectId,
+            subjectName: section.subjectName || studentSubj?.subjectName || section.subjectId,
+            credits: section.credits || studentSubj?.credits || 0,
             sectionsCount: selectedSections.filter(s => s.subjectId === section.subjectId).length
           });
         }
@@ -80,15 +76,8 @@
     return result;
   });
   
-  function handleProjectionsLoaded(data) {
-    projections = data;
-    selectedStudent = null;
-    selectedSections = [];
-    generatedSchedules = [];
-  }
-  
-  function handleSectionsLoaded(data) {
-    allSections = data;
+  function handleSectionsLoaded(sections) {
+    allSections = sections;
     selectedSections = [];
     generatedSchedules = [];
   }
@@ -230,22 +219,13 @@
   </header>
   
   <main class="flex-1">
-    <!-- STEP 1: Data Upload & Student Search -->
+    <!-- STEP 1: Student Search -->
     {#if currentStep === 1}
       <div class="max-w-4xl mx-auto px-4 py-8 space-y-8">
-        <FileUploader
-          onProjectionsLoaded={handleProjectionsLoaded}
+        <StudentSearch
+          onStudentFound={handleStudentFound}
           onSectionsLoaded={handleSectionsLoaded}
-          bind:projectionsStatus
-          bind:sectionsStatus
         />
-        
-        {#if dataLoaded}
-          <StudentSearch
-            projections={projections}
-            onStudentFound={handleStudentFound}
-          />
-        {/if}
         
         {#if selectedStudent}
           <!-- Student Info Card (like mockup 1) -->
