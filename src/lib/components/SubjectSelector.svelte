@@ -59,7 +59,7 @@
     // 3. Group by semester
     const grouped = new Map();
     subjects.filter(s => s.totalSections > 0).forEach(s => {
-      const sem = s.semester || 11; // Fallback for unknown
+      const sem = s.semester !== null && s.semester !== undefined ? s.semester : 11; // Fallback for unknown
       if (!grouped.has(sem)) grouped.set(sem, []);
       grouped.get(sem).push(s);
     });
@@ -166,7 +166,7 @@
         <div class="flex items-center gap-3">
           <div class="h-px flex-1 bg-dark-600"></div>
           <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest">
-            Semestre {group.semester}
+            {group.semester === 0 ? 'Preliminar' : `Semestre ${group.semester}`}
           </h3>
           <div class="h-px flex-1 bg-dark-600"></div>
         </div>
@@ -189,7 +189,7 @@
                   <div class="flex flex-wrap items-center gap-2 mb-0.5">
                     <div class="font-semibold text-base sm:text-lg leading-tight">{subject.subjectName}</div>
                     <span class="px-2 py-0.5 bg-accent-blue/10 text-accent-blue border border-accent-blue/20 rounded text-[10px] font-bold uppercase">
-                      Sem {subject.semester}
+                      {subject.semester === 0 ? 'Prelim' : `Sem ${subject.semester}`}
                     </span>
                   </div>
                   <div class="text-xs sm:text-sm text-gray-500">{subject.credits || 0} Créditos • {subject.subjectId}</div>
