@@ -1,7 +1,7 @@
 <script>
   let { 
-    projections = [],
     onStudentFound = () => {},
+    onSectionsLoaded = () => {},
     onError = () => {}
   } = $props();
   
@@ -10,7 +10,7 @@
   let searchResult = $state(null);
   let error = $state('');
   
-  function handleSearch() {
+  async function handleSearch() {
     if (!searchQuery.trim()) {
       error = 'Ingresa una cédula para buscar';
       return;
@@ -20,23 +20,135 @@
     error = '';
     searchResult = null;
     
-    // Simulate brief loading for UX
-    setTimeout(() => {
-      const query = searchQuery.trim();
-      const found = projections.find(p => p.studentId === query);
+    const cedula = searchQuery.trim();
+    
+    try {
+      // 1. Obtener Info del Estudiante
+      const resInfo = await fetch(`/api/get-student?cedula=${encodeURIComponent(cedula)}`);
+      const dataInfo = await resInfo.json();
       
-      if (found) {
-        searchResult = found;
-        onStudentFound(found);
-        error = '';
-      } else {
-        searchResult = null;
-        error = `Estudiante con cédula "${query}" no encontrado`;
-        onError(error);
+      if (!resInfo.ok) {
+        throw new Error(dataInfo.error || 'Error al buscar estudiante');
       }
       
+      if (!dataInfo || dataInfo.length === 0) {
+        throw new Error(`Estudiante con cédula "${cedula}" no encontrado`);
+      }
+      
+      // 2. Obtener Materias y Secciones
+      const resSubjects = await fetch(`/api/get-subjects?cedula=${encodeURIComponent(cedula)}`);
+      const dataSubjects = await resSubjects.json();
+      
+      if (!resSubjects.ok) {
+        throw new Error(dataSubjects.error || 'Error al cargar materias');
+      }
+      
+      // 3. Transformar datos al formato esperado por la app
+      const studentData = dataInfo[0];
+      
+      // Agrupar las secciones por materia para obtener la lista de materias del estudiante
+      const subjectsMap = new Map();
+      const sections = [];
+      
+      for (const row of dataSubjects) {
+        // Agregar materia única
+        if (!subjectsMap.has(row.subject_id)) {
+          subjectsMap.set(row.subject_id, {
+            subjectId: row.subject_id,
+            subjectName: row.subject_name,
+            credits: row.credits
+          });
+        }
+        
+        // Parsear horario de la sección
+        const schedule = parseSchedule(row);
+        
+        if (schedule.length > 0) {
+          sections.push({
+            nrc: row.nrc,
+            subjectId: row.subject_id,
+            subjectName: row.subject_name,
+            profesor: row.profesor,
+            cupo: row.cupo,
+            inscritos: row.inscritos,
+            disponibles: row.disponibles,
+            credits: row.credits,
+            semester: row.semester,
+            hasAvailability: row.disponibles > 0,
+            schedule
+          });
+        }
+      }
+      
+      // Construir objeto estudiante con formato esperado
+      const student = {
+        studentId: studentData.student_id,
+        name: studentData.name,
+        career: studentData.career,
+        gpa: parseFloat(studentData.gpa) || 0,
+        accumulatedCredits: studentData.accumulated_credits,
+        semester: studentData.semester,
+        status: studentData.status,
+        subjects: Array.from(subjectsMap.values())
+      };
+      
+      searchResult = student;
+      onStudentFound(student);
+      onSectionsLoaded(sections);
+      
+    } catch (e) {
+      console.error('Error en búsqueda:', e);
+      error = e.message || 'Error al conectar con la base de datos';
+      searchResult = null;
+      onError(error);
+    } finally {
       isSearching = false;
-    }, 300);
+    }
+  }
+  
+  function parseSchedule(row) {
+    const schedule = [];
+    const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+    const dayNames = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
+    const dayAbbrevs = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const dayShorts = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+    
+    for (let i = 0; i < days.length; i++) {
+      const dayValue = row[days[i]];
+      if (dayValue && dayValue.trim()) {
+        const parsed = parseTimeSlot(dayValue.trim());
+        if (parsed) {
+          schedule.push({
+            day: i,
+            dayName: dayNames[i],
+            dayAbbrev: dayAbbrevs[i],
+            dayShort: dayShorts[i],
+            ...parsed
+          });
+        }
+      }
+    }
+    
+    return schedule;
+  }
+  
+  function parseTimeSlot(value) {
+    const match = value.match(/(\d{1,2}):(\d{2})[_-](\d{1,2}):(\d{2})\s*(.*)?/);
+    if (!match) return null;
+    
+    const startHour = parseInt(match[1]);
+    const startMin = parseInt(match[2]);
+    const endHour = parseInt(match[3]);
+    const endMin = parseInt(match[4]);
+    const room = (match[5] || '').trim();
+    
+    return {
+      startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
+      endTime: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`,
+      startMinutes: startHour * 60 + startMin,
+      endMinutes: endHour * 60 + endMin,
+      room
+    };
   }
   
   function handleKeyPress(e) {
@@ -67,9 +179,8 @@
         type="text"
         bind:value={searchQuery}
         onkeypress={handleKeyPress}
-        placeholder="Ingresa la cédula del estudiante (ej: 8-900-1234)"
+        placeholder="Ingresa la cédula del estudiante (ej: 17051235)"
         class="input-field pl-10"
-        disabled={projections.length === 0}
       />
       <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
@@ -78,6 +189,7 @@
         <button 
           onclick={clearSearch}
           class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+          aria-label="Limpiar búsqueda"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -88,7 +200,7 @@
     
     <button 
       onclick={handleSearch}
-      disabled={projections.length === 0 || isSearching}
+      disabled={isSearching}
       class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {#if isSearching}
@@ -101,15 +213,6 @@
       Buscar
     </button>
   </div>
-  
-  {#if projections.length === 0}
-    <p class="text-sm text-yellow-500 mt-3 flex items-center gap-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-      </svg>
-      Primero carga el archivo de Proyecciones
-    </p>
-  {/if}
   
   {#if error}
     <div class="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400">
@@ -124,12 +227,12 @@
     <div class="mt-4 p-4 bg-dark-700 rounded-xl border border-dark-500">
       <div class="flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-xl font-bold">
-          {searchResult.studentId.charAt(0)}
+          {searchResult.name.charAt(0)}
         </div>
         <div class="flex-1">
           <div class="flex items-center gap-2">
-            <span class="text-lg font-semibold">Estudiante</span>
-            <span class="badge-open">Activo</span>
+            <span class="text-lg font-semibold">{searchResult.name}</span>
+            <span class="badge-open">{searchResult.status}</span>
           </div>
           <p class="text-gray-400">Cédula: {searchResult.studentId}</p>
         </div>
