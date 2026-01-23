@@ -7,6 +7,9 @@
   // Step management
   let currentStep = $state(1); // 1: Search, 2: Selection, 3: Results
   
+  // Mobile sidebar state
+  let isMobileSidebarOpen = $state(false);
+  
   // Global state using Svelte 5 Runes
   let allSections = $state([]);
   
@@ -159,35 +162,40 @@
 <div class="min-h-screen bg-dark-900 flex flex-col">
   <!-- Header -->
   <header class="bg-dark-800 border-b border-dark-600 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-3">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-cyan flex items-center justify-center">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="max-w-7xl mx-auto px-2 sm:px-4 py-2 sm:py-3">
+      <div class="flex items-center justify-between gap-2">
+        <!-- Logo & Title - Hidden on very small screens, compact on mobile -->
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div class="hidden xs:flex w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-accent-blue to-accent-cyan items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
           </div>
-          <div>
-            <h1 class="text-lg font-bold">Planificador Académico</h1>
-            <p class="text-xs text-gray-400">Semestre 2024-1</p>
+          <div class="min-w-0">
+            <h1 class="text-sm sm:text-lg font-bold truncate">
+              <span class="sm:hidden">Planificador</span>
+              <span class="hidden sm:inline">Planificador Académico</span>
+            </h1>
+            <p class="text-xs text-gray-400 hidden md:block">Semestre 2024-1</p>
           </div>
         </div>
         
-        <!-- Step Indicators -->
-        <div class="flex items-center gap-2">
+        <!-- Step Indicators - Compact on mobile -->
+        <div class="flex items-center gap-1 sm:gap-2">
           {#each [1, 2, 3] as step}
             <button
               onclick={() => goToStep(step)}
               disabled={(step === 2 && !canProceedToStep2) || (step === 3 && !canProceedToStep3)}
-              class="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all
+              class="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg transition-all text-sm
                 {currentStep === step ? 'bg-accent-blue text-white' : 'bg-dark-700 text-gray-400 hover:bg-dark-600'}
                 {((step === 2 && !canProceedToStep2) || (step === 3 && !canProceedToStep3)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
+              aria-label="Paso {step}"
             >
-              <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center
+              <span class="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0
                 {currentStep === step ? 'bg-white text-accent-blue' : 'bg-dark-500'}">
                 {step}
               </span>
-              <span class="text-sm hidden md:block">
+              <span class="hidden lg:block">
                 {#if step === 1}Datos
                 {:else if step === 2}Selección
                 {:else}Horarios
@@ -197,22 +205,23 @@
           {/each}
         </div>
         
+        <!-- Action Button -->
         {#if currentStep === 2 && canProceedToStep3}
-          <button onclick={() => goToStep(3)} class="btn-primary">
-            Generar Horarios
+          <button onclick={() => goToStep(3)} class="btn-primary text-sm px-2 sm:px-4 py-1.5 sm:py-2">
+            <span class="hidden sm:inline">Generar</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
           </button>
         {:else if currentStep === 1 && canProceedToStep2}
-          <button onclick={() => goToStep(2)} class="btn-primary">
-            Continuar
+          <button onclick={() => goToStep(2)} class="btn-primary text-sm px-2 sm:px-4 py-1.5 sm:py-2">
+            <span class="hidden sm:inline">Continuar</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
           </button>
         {:else}
-          <div class="w-32"></div>
+          <div class="w-8 sm:w-32"></div>
         {/if}
       </div>
     </div>
@@ -229,44 +238,44 @@
         
         {#if selectedStudent}
           <!-- Student Info Card (like mockup 1) -->
-          <div class="card p-6">
-            <div class="flex items-start gap-6">
+          <div class="card p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
               <!-- Avatar -->
-              <div class="w-20 h-20 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-2xl font-bold relative">
+              <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-xl sm:text-2xl font-bold relative flex-shrink-0">
                 {selectedStudent.name.charAt(0)}
-                <div class="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-dark-800"></div>
+                <div class="absolute bottom-0 right-0 w-3 h-3 sm:w-4 sm:h-4 bg-green-500 rounded-full border-2 border-dark-800"></div>
               </div>
               
               <!-- Info -->
-              <div class="flex-1">
-                <div class="flex items-center justify-between mb-2">
+              <div class="flex-1 w-full text-center sm:text-left">
+                <div class="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between mb-2 gap-2">
                   <div>
-                    <h3 class="text-xl font-bold">{selectedStudent.name}</h3>
-                    <p class="text-gray-400">{selectedStudent.career}</p>
+                    <h3 class="text-lg sm:text-xl font-bold">{selectedStudent.name}</h3>
+                    <p class="text-gray-400 text-sm sm:text-base">{selectedStudent.career}</p>
                   </div>
-                  <div class="flex items-center gap-2">
-                    <span class="px-3 py-1 bg-dark-600 rounded-lg text-sm">ID: {selectedStudent.studentId}</span>
+                  <div class="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
+                    <span class="px-2 sm:px-3 py-1 bg-dark-600 rounded-lg text-xs sm:text-sm">ID: {selectedStudent.studentId}</span>
                     <span class="badge-open">{selectedStudent.status}</span>
                   </div>
                 </div>
                 
                 <!-- Stats -->
-                <div class="grid grid-cols-4 gap-4 mt-4 py-4 border-t border-b border-dark-600">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mt-4 py-4 border-t border-b border-dark-600">
                   <div>
                     <div class="text-xs text-gray-500 uppercase">Promedio</div>
-                    <div class="text-2xl font-bold">{selectedStudent.gpa.toFixed(2)}</div>
+                    <div class="text-xl sm:text-2xl font-bold">{selectedStudent.gpa.toFixed(2)}</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 uppercase">Créditos</div>
-                    <div class="text-2xl font-bold">{selectedStudent.accumulatedCredits}<span class="text-sm text-gray-400">/{TOTAL_CAREER_UC}</span></div>
+                    <div class="text-xl sm:text-2xl font-bold">{selectedStudent.accumulatedCredits}<span class="text-xs sm:text-sm text-gray-400">/{TOTAL_CAREER_UC}</span></div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 uppercase">Semestre</div>
-                    <div class="text-2xl font-bold">{selectedStudent.semester}°</div>
+                    <div class="text-xl sm:text-2xl font-bold">{selectedStudent.semester}°</div>
                   </div>
                   <div>
                     <div class="text-xs text-gray-500 uppercase">Nivel</div>
-                    <div class="text-2xl font-bold">{getSemesterName(selectedStudent.semester)}</div>
+                    <div class="text-lg sm:text-2xl font-bold">{getSemesterName(selectedStudent.semester)}</div>
                   </div>
                 </div>
                 
@@ -285,7 +294,7 @@
                 </div>
                 
                 <!-- Subject count -->
-                <div class="mt-4 flex items-center gap-6 text-sm">
+                <div class="mt-4 flex items-center justify-center sm:justify-start gap-6 text-sm">
                   <div class="flex items-center gap-2">
                     <svg class="w-5 h-5 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
@@ -302,12 +311,50 @@
     
     <!-- STEP 2: Course Selection -->
     {#if currentStep === 2}
-      <div class="flex h-[calc(100vh-64px)]">
+      <div class="flex flex-col lg:flex-row h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] relative">
+        <!-- Mobile Sidebar Toggle -->
+        <button 
+          onclick={() => isMobileSidebarOpen = !isMobileSidebarOpen}
+          class="lg:hidden fixed bottom-4 right-4 z-40 w-14 h-14 bg-accent-blue rounded-full shadow-lg flex items-center justify-center text-white"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+          {#if uniqueSelectedSubjects().length > 0}
+            <span class="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full text-xs flex items-center justify-center">
+              {uniqueSelectedSubjects().length}
+            </span>
+          {/if}
+        </button>
+        
+        <!-- Mobile Overlay -->
+        {#if isMobileSidebarOpen}
+          <div 
+            class="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onclick={() => isMobileSidebarOpen = false}
+          ></div>
+        {/if}
+        
         <!-- Sidebar - Selected Subjects -->
-        <aside class="w-64 bg-dark-800 border-r border-dark-600 flex flex-col">
-          <div class="p-4 border-b border-dark-600">
-            <h3 class="font-semibold text-sm text-gray-400 uppercase">Materias Seleccionadas</h3>
-            <p class="text-xs text-gray-500 mt-1">Basado en prerrequisitos completados</p>
+        <aside class="
+          fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+          w-72 sm:w-80 lg:w-64 bg-dark-800 border-r border-dark-600 flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          {isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ">
+          <div class="p-4 border-b border-dark-600 flex items-center justify-between">
+            <div>
+              <h3 class="font-semibold text-sm text-gray-400 uppercase">Materias Seleccionadas</h3>
+              <p class="text-xs text-gray-500 mt-1">Basado en prerrequisitos</p>
+            </div>
+            <button 
+              onclick={() => isMobileSidebarOpen = false}
+              class="lg:hidden p-2 hover:bg-dark-700 rounded-lg"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
           </div>
           
           <div class="flex-1 overflow-y-auto p-2">
@@ -318,7 +365,7 @@
             {:else}
               {#each uniqueSelectedSubjects() as subject}
                 <div class="flex items-center gap-3 p-3 rounded-lg bg-dark-700 mb-2">
-                  <div class="w-8 h-8 rounded-lg bg-accent-blue/20 flex items-center justify-center">
+                  <div class="w-8 h-8 rounded-lg bg-accent-blue/20 flex items-center justify-center flex-shrink-0">
                     <svg class="w-4 h-4 text-accent-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
                     </svg>
@@ -327,7 +374,7 @@
                     <div class="font-medium text-sm truncate">{subject.subjectName}</div>
                     <div class="text-xs text-gray-500">{subject.subjectId}</div>
                   </div>
-                  <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
                 </div>
@@ -351,11 +398,11 @@
         </aside>
         
         <!-- Main Content -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6">
           <div class="max-w-4xl">
-            <div class="mb-6">
-              <h2 class="text-2xl font-bold">Selección de Materias</h2>
-              <p class="text-gray-400 mt-1">Selecciona las secciones específicas para construir tu horario del semestre 2024-1</p>
+            <div class="mb-4 sm:mb-6">
+              <h2 class="text-xl sm:text-2xl font-bold">Selección de Materias</h2>
+              <p class="text-gray-400 mt-1 text-sm sm:text-base">Selecciona las secciones para tu horario del semestre 2024-1</p>
             </div>
             
             <SubjectSelector
@@ -371,13 +418,46 @@
     
     <!-- STEP 3: Schedule Results -->
     {#if currentStep === 3}
-      <div class="flex h-[calc(100vh-64px)]">
+      <div class="flex flex-col lg:flex-row h-[calc(100vh-56px)] sm:h-[calc(100vh-64px)] relative">
+        <!-- Mobile Sidebar Toggle -->
+        <button 
+          onclick={() => isMobileSidebarOpen = !isMobileSidebarOpen}
+          class="lg:hidden fixed bottom-4 right-4 z-40 w-14 h-14 bg-accent-blue rounded-full shadow-lg flex items-center justify-center text-white"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+        </button>
+        
+        <!-- Mobile Overlay -->
+        {#if isMobileSidebarOpen}
+          <div 
+            class="lg:hidden fixed inset-0 bg-black/50 z-40"
+            onclick={() => isMobileSidebarOpen = false}
+          ></div>
+        {/if}
+        
         <!-- Sidebar - Credits & Sections Summary -->
-        <aside class="w-64 bg-dark-800 border-r border-dark-600 flex flex-col">
+        <aside class="
+          fixed lg:relative inset-y-0 left-0 z-50 lg:z-auto
+          w-72 sm:w-80 lg:w-64 bg-dark-800 border-r border-dark-600 flex flex-col
+          transform transition-transform duration-300 ease-in-out
+          {isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        ">
           <div class="p-4 border-b border-dark-600">
             <div class="flex items-center justify-between mb-2">
               <span class="text-xs text-gray-500 uppercase">Total Créditos</span>
-              <span class="badge-open">En Límite</span>
+              <div class="flex items-center gap-2">
+                <span class="badge-open">En Límite</span>
+                <button 
+                  onclick={() => isMobileSidebarOpen = false}
+                  class="lg:hidden p-1 hover:bg-dark-700 rounded-lg"
+                >
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div class="text-3xl font-bold">{totalCredits()}<span class="text-lg text-gray-400">/ 40 máx</span></div>
             
@@ -399,8 +479,8 @@
               {#each uniqueSelectedSubjects() as subject}
                 <div class="p-3 rounded-lg bg-dark-700 mb-2">
                   <div class="flex items-center justify-between mb-2">
-                    <div class="font-medium text-sm">{subject.subjectName}</div>
-                    <div class="w-2 h-2 rounded-full 
+                    <div class="font-medium text-sm truncate flex-1">{subject.subjectName}</div>
+                    <div class="w-2 h-2 rounded-full flex-shrink-0
                       {subject.sectionsCount > 0 ? 'bg-green-500' : 'bg-gray-500'}"></div>
                   </div>
                   <div class="text-xs text-gray-500">{subject.subjectId}</div>
@@ -425,7 +505,7 @@
         </aside>
         
         <!-- Main Content - Calendar -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="flex-1 overflow-y-auto p-3 sm:p-6">
           {#if isGenerating}
             <div class="flex items-center justify-center h-full">
               <div class="text-center">
