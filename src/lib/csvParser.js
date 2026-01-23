@@ -50,7 +50,7 @@ export function parseProjectionsCSV(file) {
                 studentId,
                 name: String(row['NOMBRE_ESTUDIANTE'] || row['name'] || row['studentName'] || 'Estudiante').trim(),
                 career: String(row['CARRERA_NOMBRE'] || row['career'] || row['programDesc'] || 'Ingeniería Informática').trim(),
-                gpa: parseFloat(row['averageGradePoints'] || row['PROMEDIO'] || row['gpa']) || 0,
+                gpa: parseFloat(String(row['averageGradePoints'] || row['PROMEDIO'] || row['gpa'] || '0').replace(',', '.')) || 0,
                 accumulatedCredits: parseInt(row['CREDITOS_ACUMULADOS'] || row['accumulatedCredits'] || row['earnedCredits']) || 0,
                 semester: parseInt(row['semesterLocation'] || row['SEMESTRE'] || row['semester']) || 1,
                 status: String(row['ESTADO'] || row['status'] || 'Activo').trim(),
@@ -181,8 +181,9 @@ export function parseSectionsCSV(file) {
 
           for (const row of results.data) {
             const subjCode = String(row['SSBSECT_SUBJ_CODE'] || '').trim();
-            const crseNumb = String(row['SSBSECT_CRSE_NUMB'] || '').trim()
-              .replace(/'/g, '');
+            const crseNumb = String(row['SSBSECT_CRSE_NUMB'] || '').trim().replace(/'/g, '');
+            const subjectName = String(row['COURSE_NAME'] || row['NOMBRE_MATERIA'] || row['subjectName'] || '').trim();
+            const semester = parseInt(row['COURSE_SEMESTRE'] || row['SEMESTRE'] || row['semester']) || 0;
 
             if (!subjCode || !crseNumb) continue;
 
@@ -231,6 +232,8 @@ export function parseSectionsCSV(file) {
                 disponibles,
                 credits,
                 hasAvailability: disponibles > 0,
+                subjectName: subjectName || normalizedSubjectId,
+                semester,
                 schedule
               });
             }
