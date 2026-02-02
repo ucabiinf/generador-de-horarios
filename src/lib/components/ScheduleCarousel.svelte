@@ -1,5 +1,8 @@
 <script>
   import ScheduleCalendar from './ScheduleCalendar.svelte';
+  import { getSubjectColor } from '../timeUtils.js';
+  import html2canvas from 'html2canvas'; 
+  import jsPDF from 'jspdf';
   
   let { 
     schedules = [],
@@ -7,30 +10,89 @@
     totalCredits = () => 0
   } = $props();
   
-  let currentIndex = $state(0);
+  let currentPage = $state(0);
+  const pageSize = 10;
   
-  let currentSchedule = $derived(() => {
-    if (schedules.length === 0) return null;
-    return schedules[currentIndex];
+  let totalPages = $derived(Math.ceil(schedules.length / pageSize));
+  
+  let visibleSchedules = $derived(() => {
+    if (schedules.length === 0) return [];
+    const start = currentPage * pageSize;
+    return schedules.slice(start, start + pageSize);
   });
   
   function goToPrevious() {
-    if (currentIndex > 0) {
-      currentIndex--;
+    if (currentPage > 0) {
+      currentPage--;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
   
   function goToNext() {
-    if (currentIndex < schedules.length - 1) {
-      currentIndex++;
+    if (currentPage < totalPages - 1) {
+      currentPage++;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
   
   $effect(() => {
-    if (schedules.length > 0 && currentIndex >= schedules.length) {
-      currentIndex = 0;
+    if (schedules.length > 0 && currentPage >= totalPages) {
+      currentPage = 0;
     }
   });
+
+  async function downloadPNG(index) {
+      const element = document.getElementById(`schedule-card-${index}`);
+      if (!element) return;
+      
+      try {
+          const canvas = await html2canvas(element, {
+              backgroundColor: '#0f1419', // Match tailwind.config.js dark-900
+              scale: 2, 
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              ignoreElements: (el) => el.classList.contains('no-capture')
+          });
+          
+          const link = document.createElement('a');
+          link.download = `horario_opcion_${index}.png`;
+          link.href = canvas.toDataURL('image/png', 1.0);
+          link.click();
+      } catch (error) {
+          console.error('Error generating PNG:', error);
+          alert('Hubo un error al generar la imagen. Por favor intenta de nuevo.');
+      }
+  }
+
+  async function downloadPDF(index) {
+      const element = document.getElementById(`schedule-card-${index}`);
+      if (!element) return;
+      
+      try {
+          const canvas = await html2canvas(element, {
+              backgroundColor: '#0f1419',
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              logging: false,
+              ignoreElements: (el) => el.classList.contains('no-capture')
+          });
+          
+          const imgData = canvas.toDataURL('image/png', 1.0);
+          const pdf = new jsPDF({
+              orientation: canvas.width > canvas.height ? 'l' : 'p',
+              unit: 'px',
+              format: [canvas.width, canvas.height] 
+          });
+          
+          pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height, undefined, 'FAST');
+          pdf.save(`horario_opcion_${index}.pdf`);
+      } catch (error) {
+          console.error('Error generating PDF:', error);
+          alert('Hubo un error al generar el PDF. Por favor intenta de nuevo.');
+      }
+  }
 </script>
 
 {#if schedules.length === 0}
@@ -44,12 +106,12 @@
     </div>
   </div>
 {:else}
-  <div class="space-y-3 sm:space-y-4">
+  <div class="space-y-6 sm:space-y-8">
     <!-- Navigation Header -->
-    <div class="flex items-center justify-between bg-dark-800 rounded-xl p-2 sm:p-3 border border-dark-600">
+    <div class="flex items-center justify-between bg-dark-800 rounded-xl p-2 sm:p-3 border border-dark-600 sticky top-0 z-10 shadow-lg">
       <button
         onclick={goToPrevious}
-        disabled={currentIndex === 0}
+        disabled={currentPage === 0}
         class="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg hover:bg-dark-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,22 +122,16 @@
       
       <div class="flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-center">
         <span class="text-sm sm:text-lg font-semibold">
-          <span class="text-accent-blue">{currentIndex + 1}</span>/{schedules.length}
+           Página <span class="text-accent-blue">{currentPage + 1}</span> de {totalPages}
         </span>
-        <span class="text-gray-400 text-xs sm:text-sm">{totalCredits()} UC</span>
-        {#if currentSchedule()?.hasFullSections}
-          <span class="badge-full flex items-center gap-1 text-[10px] sm:text-xs">
-            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-            </svg>
-            Llenas
-          </span>
-        {/if}
+        <span class="text-gray-400 text-xs sm:text-sm">
+           ({schedules.length} resultados)
+        </span>
       </div>
       
       <button
         onclick={goToNext}
-        disabled={currentIndex === schedules.length - 1}
+        disabled={currentPage === totalPages - 1}
         class="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-2 rounded-lg hover:bg-dark-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
       >
         <span class="hidden sm:inline text-sm">Siguiente</span>
@@ -85,32 +141,99 @@
       </button>
     </div>
     
-    <!-- Calendar -->
-    {#if currentSchedule()}
-      <ScheduleCalendar 
-        schedule={currentSchedule().sections} 
-        {colorMap}
-      />
-      
-      <!-- NRC Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3">
-        {#each currentSchedule().sections as section}
-          <div class="bg-dark-800 rounded-lg p-2 sm:p-3 border border-dark-600
-            {!section.hasAvailability ? 'border-red-500/50' : ''}">
-            <div class="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">NRC</div>
-            <div class="font-mono text-base sm:text-lg font-bold text-accent-blue">{section.nrc}</div>
-            <div class="text-xs sm:text-sm text-gray-400 truncate mt-0.5 sm:mt-1">{section.subjectName || section.subjectId}</div>
-            {#if !section.hasAvailability}
-              <div class="text-[10px] sm:text-xs text-red-400 mt-1 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                Sin cupo
-              </div>
-            {/if}
+    <!-- Schedules List -->
+    <div class="space-y-12">
+      {#each visibleSchedules() as schedule, index}
+        {@const globalIndex = currentPage * pageSize + index + 1}
+        <div class="bg-dark-900/50 rounded-2xl p-4 border border-dark-700" id="schedule-card-{globalIndex}">
+          <div class="flex items-center justify-between mb-4 no-capture">
+             <h3 class="text-xl font-bold text-gray-200">Opción {globalIndex}</h3>
+             <div class="flex gap-3">
+                <button
+                    onclick={() => downloadPNG(globalIndex)}
+                    class="flex items-center gap-2 px-3 py-1 bg-dark-700 hover:bg-dark-600 text-gray-300 rounded-lg text-xs border border-dark-600 transition-colors"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    PNG
+                </button>
+                <button
+                    onclick={() => downloadPDF(globalIndex)}
+                    class="flex items-center gap-2 px-3 py-1 bg-accent-blue/10 hover:bg-accent-blue/20 text-accent-cyan rounded-lg text-xs border border-accent-blue/30 transition-colors"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    PDF
+                </button>
+                <span class="text-gray-400 text-sm">{totalCredits()} UC</span>
+                {#if schedule.hasFullSections}
+                  <span class="badge-full flex items-center gap-1 text-xs px-2 py-1 rounded bg-red-900/30 text-red-300 border border-red-800">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    Secciones Llenas
+                  </span>
+                {/if}
+             </div>
           </div>
-        {/each}
-      </div>
+
+          <ScheduleCalendar 
+            schedule={schedule.sections} 
+            {colorMap}
+          />
+          
+          <!-- NRC Summary Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 mt-4">
+            {#each schedule.sections as section}
+              <div class="bg-dark-800 rounded-lg p-2 sm:p-3 border border-dark-600
+                {!section.hasAvailability ? 'border-red-500/50' : ''}">
+                <div class="text-[10px] sm:text-xs text-gray-400 mb-0.5 sm:mb-1 uppercase tracking-tighter font-bold">NRC</div>
+                <div class="font-mono text-lg sm:text-xl font-black text-accent-blue leading-none mb-1.5">{section.nrc}</div>
+                <div class="text-xs sm:text-sm font-medium text-gray-200 leading-tight line-clamp-3 min-h-[3em]" title={section.subjectName}>
+                  {section.subjectName || section.subjectId}
+                </div>
+                {#if !section.hasAvailability}
+                  <div class="text-[10px] sm:text-xs text-red-400 mt-2 flex items-center gap-1 font-bold">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    SIN CUPO
+                  </div>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        </div>
+      {/each}
+    </div>
+    
+    <!-- Bottom Pagination -->
+    {#if totalPages > 1}
+        <div class="flex items-center justify-center gap-4 mt-8">
+            <button
+                onclick={goToPrevious}
+                disabled={currentPage === 0}
+                class="bg-dark-800 p-2 rounded-lg hover:bg-dark-700 disabled:opacity-50 transition-colors"
+             >
+                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+             </button>
+             <span class="text-gray-400">
+                Página {currentPage + 1} de {totalPages}
+             </span>
+             <button
+                onclick={goToNext}
+                disabled={currentPage === totalPages - 1}
+                class="bg-dark-800 p-2 rounded-lg hover:bg-dark-700 disabled:opacity-50 transition-colors"
+             >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+             </button>
+        </div>
     {/if}
   </div>
 {/if}

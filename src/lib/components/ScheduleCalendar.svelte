@@ -91,24 +91,32 @@
               <!-- Schedule Blocks -->
               {#each getBlocksForDay(day.id) as block}
                 <div
-                  class="absolute left-0.5 right-0.5 rounded-md sm:rounded-lg px-1 sm:px-1.5 py-0.5 sm:py-1 overflow-hidden shadow-lg transition-all hover:scale-[1.02] hover:z-10
+                  class="absolute left-0.5 right-0.5 rounded-md sm:rounded-lg px-2 py-1.5 overflow-visible shadow-lg transition-all hover:scale-[1.02] hover:z-20
                     {block.color.bg} {block.color.text}
                     {!block.hasAvailability ? 'ring-2 ring-red-500' : ''}"
-                  style="top: {block.top}px; height: {block.height}px; min-height: 28px;"
+                  style="top: {block.top}px; height: {block.height}px; min-height: 35px;"
                   title="{block.subjectName} - NRC: {block.nrc}"
                 >
-                  <div class="text-[9px] sm:text-xs font-semibold truncate">{block.subjectId}</div>
-                  {#if block.height > 35}
-                    <div class="text-[8px] sm:text-[10px] opacity-80 truncate">{block.subjectName}</div>
-                  {/if}
-                  {#if block.height > 50}
-                    <div class="text-[8px] sm:text-[10px] opacity-70 truncate flex items-center gap-0.5 mt-0.5">
-                      <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                      </svg>
-                      {block.room || 'TBA'}
-                    </div>
-                  {/if}
+                  <div class="text-[11.5px] sm:text-[13.5px] font-bold leading-tight break-words drop-shadow-sm">
+                    {block.subjectName || block.subjectId}
+                  </div>
+                  
+                  <div class="flex flex-col absolute bottom-1.5 left-2 right-2">
+                    {#if block.height > 60}
+                      <div class="text-[10px] sm:text-[11px] font-black opacity-100 font-mono bg-black/25 rounded px-1.5 w-fit shadow-sm">
+                        {block.nrc}
+                      </div>
+                    {/if}
+                    
+                    {#if block.height > 90}
+                      <div class="text-[9.5px] sm:text-[10.5px] opacity-100 flex items-center gap-1 font-bold mt-0.5">
+                        <svg class="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        </svg>
+                        <span class="whitespace-nowrap">{block.room || 'TBA'}</span>
+                      </div>
+                    {/if}
+                  </div>
                 </div>
               {/each}
             </div>

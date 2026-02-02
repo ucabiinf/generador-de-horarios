@@ -316,6 +316,7 @@
         <button 
           onclick={() => isMobileSidebarOpen = !isMobileSidebarOpen}
           class="lg:hidden fixed bottom-4 right-4 z-40 w-14 h-14 bg-accent-blue rounded-full shadow-lg flex items-center justify-center text-white"
+          aria-label="Toggle Navigation"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -332,6 +333,10 @@
           <div 
             class="lg:hidden fixed inset-0 bg-black/50 z-40"
             onclick={() => isMobileSidebarOpen = false}
+             onkeydown={(e) => e.key === 'Escape' && (isMobileSidebarOpen = false)}
+             role="button"
+             tabindex="0"
+             aria-label="Close Sidebar"
           ></div>
         {/if}
         
@@ -350,6 +355,7 @@
             <button 
               onclick={() => isMobileSidebarOpen = false}
               class="lg:hidden p-2 hover:bg-dark-700 rounded-lg"
+              aria-label="Cerrar barra lateral"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -423,6 +429,7 @@
         <button 
           onclick={() => isMobileSidebarOpen = !isMobileSidebarOpen}
           class="lg:hidden fixed bottom-4 right-4 z-40 w-14 h-14 bg-accent-blue rounded-full shadow-lg flex items-center justify-center text-white"
+          aria-label="Toggle Sidebar"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
@@ -434,6 +441,10 @@
           <div 
             class="lg:hidden fixed inset-0 bg-black/50 z-40"
             onclick={() => isMobileSidebarOpen = false}
+             onkeydown={(e) => e.key === 'Escape' && (isMobileSidebarOpen = false)}
+             role="button"
+             tabindex="0"
+             aria-label="Close Sidebar"
           ></div>
         {/if}
         
@@ -452,6 +463,7 @@
                 <button 
                   onclick={() => isMobileSidebarOpen = false}
                   class="lg:hidden p-1 hover:bg-dark-700 rounded-lg"
+                  aria-label="Cerrar barra lateral"
                 >
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -491,16 +503,6 @@
                 </div>
               {/each}
             {/if}
-          </div>
-          
-          <!-- Save Button -->
-          <div class="p-4 border-t border-dark-600">
-            <button class="w-full btn-primary justify-center">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
-              </svg>
-              Guardar Horario
-            </button>
           </div>
         </aside>
         

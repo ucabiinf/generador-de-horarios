@@ -55,7 +55,7 @@
         if (!subjectsMap.has(row.subject_id)) {
           subjectsMap.set(row.subject_id, {
             subjectId: row.subject_id,
-            subjectName: row.subject_name,
+            subjectName: row.subject_name || row.subject_id,
             credits: row.credits
           });
         }
@@ -67,7 +67,7 @@
           sections.push({
             nrc: row.nrc,
             subjectId: row.subject_id,
-            subjectName: row.subject_name,
+            subjectName: row.subject_name || row.subject_id,
             profesor: row.profesor,
             cupo: row.cupo,
             inscritos: row.inscritos,

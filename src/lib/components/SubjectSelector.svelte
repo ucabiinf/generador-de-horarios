@@ -178,6 +178,9 @@
               <div 
                 class="p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 cursor-pointer hover:bg-dark-700 transition-colors"
                 onclick={() => toggleSubjectExpand(subject.subjectId)}
+                onkeydown={(e) => e.key === 'Enter' && toggleSubjectExpand(subject.subjectId)}
+                role="button"
+                tabindex="0"
               >
                 <!-- Icon -->
                 <div class="w-10 h-10 rounded-xl bg-accent-blue/20 flex items-center justify-center text-lg flex-shrink-0">
@@ -197,14 +200,15 @@
                 
                 <!-- Selection checkbox & sections count -->
                 <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                  <label class="flex items-center gap-2" onclick={(e) => e.stopPropagation()}>
+                  <div class="flex items-center gap-2" onclick={(e) => e.stopPropagation()} role="group">
                     <input
                       type="checkbox"
                       checked={selectedSubjectIds.has(subject.subjectId)}
                       onchange={() => toggleSubjectSelection(subject)}
                       class="custom-checkbox"
+                      aria-label="Seleccionar materia"
                     />
-                  </label>
+                  </div>
                   
                   <div class="flex items-center gap-2">
                     <span class="text-xs sm:text-sm bg-dark-600 px-2 py-1 rounded">{subject.totalSections} Secciones</span>
@@ -232,6 +236,9 @@
                             ? 'bg-accent-blue/20 border-accent-blue/50' 
                             : 'bg-dark-700 border-dark-600 hover:border-dark-500'}"
                         onclick={() => toggleSectionSelection(section, subject)}
+                        onkeydown={(e) => e.key === 'Enter' && toggleSectionSelection(section, subject)}
+                        role="button"
+                        tabindex="0"
                       >
                         <div class="flex items-start justify-between gap-3">
                           <div class="flex-1 min-w-0">
