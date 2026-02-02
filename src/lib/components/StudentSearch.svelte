@@ -166,10 +166,12 @@
 </script>
 
 <div class="card">
-  <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
-    <svg class="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-    </svg>
+  <h3 class="text-lg font-bold mb-4 flex items-center gap-3 text-theme-primary">
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-cyan/20 to-accent-blue/20 flex items-center justify-center border border-accent-cyan/30">
+      <svg class="w-5 h-5 text-accent-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+    </div>
     Búsqueda de Estudiante
   </h3>
   
@@ -180,15 +182,15 @@
         bind:value={searchQuery}
         onkeypress={handleKeyPress}
         placeholder="Ingresa la cédula del estudiante (ej: 17051235)"
-        class="input-field pl-10"
+        class="input-field pl-12"
       />
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
       </svg>
       {#if searchQuery}
         <button 
           onclick={clearSearch}
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-primary transition-colors p-1 rounded-lg hover:bg-theme-tertiary"
           aria-label="Limpiar búsqueda"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,41 +206,43 @@
       class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {#if isSearching}
-        <div class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+        <div class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
       {:else}
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
         </svg>
       {/if}
-      Buscar
+      <span class="hidden sm:inline">Buscar</span>
     </button>
   </div>
   
   {#if error}
-    <div class="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-2 text-red-400">
-      <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
-      <span class="text-sm">{error}</span>
+    <div class="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl flex items-center gap-3 text-red-400">
+      <div class="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <span class="text-sm font-medium">{error}</span>
     </div>
   {/if}
   
   {#if searchResult}
-    <div class="mt-4 p-4 bg-dark-700 rounded-xl border border-dark-500">
+    <div class="mt-4 p-4 bg-theme-tertiary rounded-xl border border-theme hover-lift">
       <div class="flex flex-col sm:flex-row items-center gap-4">
-        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-lg sm:text-xl font-bold flex-shrink-0">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-accent-blue via-accent-purple to-accent-pink flex items-center justify-center text-xl sm:text-2xl font-bold text-white flex-shrink-0 shadow-glow">
           {searchResult.name.charAt(0)}
         </div>
         <div class="flex-1 text-center sm:text-left">
           <div class="flex flex-col sm:flex-row items-center gap-2">
-            <span class="text-base sm:text-lg font-semibold">{searchResult.name}</span>
+            <span class="text-base sm:text-lg font-bold text-theme-primary">{searchResult.name}</span>
             <span class="badge-open">{searchResult.status}</span>
           </div>
-          <p class="text-gray-400 text-sm">Cédula: {searchResult.studentId}</p>
+          <p class="text-theme-muted text-sm mt-1">Cédula: {searchResult.studentId}</p>
         </div>
-        <div class="text-center sm:text-right">
-          <div class="text-xl sm:text-2xl font-bold text-accent-cyan">{searchResult.subjects.length}</div>
-          <div class="text-xs sm:text-sm text-gray-400">Materias disponibles</div>
+        <div class="text-center sm:text-right px-4 py-3 bg-accent-cyan/10 rounded-xl border border-accent-cyan/20">
+          <div class="text-2xl sm:text-3xl font-bold text-accent-cyan">{searchResult.subjects.length}</div>
+          <div class="text-xs sm:text-sm text-theme-muted">Materias disponibles</div>
         </div>
       </div>
     </div>
