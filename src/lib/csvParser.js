@@ -288,6 +288,7 @@ export function parseSectionsCSV(file) {
 
             const normalizedSubjectId = `${subjCode}-${crseNumb}`;
             const nrc = String(row['SSBSECT_CRN'] || '').trim();
+            const campus = String(row['CAMPUS'] || row['CAMPUS '] || '').trim().replace(/'/g, '');
             const cupo = parseInt(row['CUPO']) || 0;
             const inscritos = parseInt(row['INSCRITOS']) || 0;
             const disponibles = cupo - inscritos;
@@ -326,6 +327,7 @@ export function parseSectionsCSV(file) {
                 nrc,
                 subjectId: normalizedSubjectId,
                 profesor,
+                campus,
                 cupo,
                 inscritos,
                 disponibles,
