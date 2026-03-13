@@ -1,5 +1,7 @@
 <script>
   let { 
+    studentsData = [],
+    sectionsData = [],
     onStudentFound = () => {},
     onSectionsLoaded = () => {},
     onError = () => {}
@@ -10,7 +12,12 @@
   let searchResult = $state(null);
   let error = $state('');
   
-  async function handleSearch() {
+  function handleSearch() {
+    if (!studentsData.length || !sectionsData.length) {
+      error = 'Primero debes cargar los archivos de oferta y proyecciones';
+      return;
+    }
+
     if (!searchQuery.trim()) {
       error = 'Ingresa una cédula para buscar';
       return;
@@ -23,132 +30,38 @@
     const cedula = searchQuery.trim();
     
     try {
-      // 1. Obtener Info del Estudiante
-      const resInfo = await fetch(`/api/get-student?cedula=${encodeURIComponent(cedula)}`);
-      const dataInfo = await resInfo.json();
+      // 1. Buscar Estudiante en los datos locales
+      const student = studentsData.find(s => s.studentId === cedula);
       
-      if (!resInfo.ok) {
-        throw new Error(dataInfo.error || 'Error al buscar estudiante');
+      if (!student) {
+        throw new Error(`Estudiante con cédula "${cedula}" no encontrado en el archivo de proyecciones`);
       }
       
-      if (!dataInfo || dataInfo.length === 0) {
-        throw new Error(`Estudiante con cédula "${cedula}" no encontrado`);
+      // 2. Filtrar Secciones para el estudiante basado en sus materias proyectadas
+      // Obtenemos los IDs de las materias que el estudiante tiene proyectadas
+      const projectedSubjectIds = new Set(student.subjects.map(s => s.subjectId));
+      
+      // Filtramos la oferta académica para obtener las secciones de esas materias
+      const relevantSections = sectionsData.filter(section => 
+        projectedSubjectIds.has(section.subjectId)
+      );
+      
+      if (relevantSections.length === 0) {
+        console.warn('No se encontraron secciones en la oferta para las materias proyectadas del estudiante');
       }
-      
-      // 2. Obtener Materias y Secciones
-      const resSubjects = await fetch(`/api/get-subjects?cedula=${encodeURIComponent(cedula)}`);
-      const dataSubjects = await resSubjects.json();
-      
-      if (!resSubjects.ok) {
-        throw new Error(dataSubjects.error || 'Error al cargar materias');
-      }
-      
-      // 3. Transformar datos al formato esperado por la app
-      const studentData = dataInfo[0];
-      
-      // Agrupar las secciones por materia para obtener la lista de materias del estudiante
-      const subjectsMap = new Map();
-      const sections = [];
-      
-      for (const row of dataSubjects) {
-        // Agregar materia única
-        if (!subjectsMap.has(row.subject_id)) {
-          subjectsMap.set(row.subject_id, {
-            subjectId: row.subject_id,
-            subjectName: row.subject_name || row.subject_id,
-            credits: row.credits
-          });
-        }
-        
-        // Parsear horario de la sección
-        const schedule = parseSchedule(row);
-        
-        if (schedule.length > 0) {
-          sections.push({
-            nrc: row.nrc,
-            subjectId: row.subject_id,
-            subjectName: row.subject_name || row.subject_id,
-            profesor: row.profesor,
-            cupo: row.cupo,
-            inscritos: row.inscritos,
-            disponibles: row.disponibles,
-            credits: row.credits,
-            semester: row.semester,
-            hasAvailability: row.disponibles > 0,
-            schedule
-          });
-        }
-      }
-      
-      // Construir objeto estudiante con formato esperado
-      const student = {
-        studentId: studentData.student_id,
-        name: studentData.name,
-        career: studentData.career,
-        gpa: parseFloat(studentData.gpa) || 0,
-        accumulatedCredits: studentData.accumulated_credits,
-        semester: studentData.semester,
-        status: studentData.status,
-        subjects: Array.from(subjectsMap.values())
-      };
       
       searchResult = student;
       onStudentFound(student);
-      onSectionsLoaded(sections);
+      onSectionsLoaded(relevantSections);
       
     } catch (e) {
-      console.error('Error en búsqueda:', e);
-      error = e.message || 'Error al conectar con la base de datos';
+      console.error('Error en búsqueda local:', e);
+      error = e.message || 'Error al procesar la búsqueda';
       searchResult = null;
       onError(error);
     } finally {
       isSearching = false;
     }
-  }
-  
-  function parseSchedule(row) {
-    const schedule = [];
-    const days = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
-    const dayNames = ['LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO', 'DOMINGO'];
-    const dayAbbrevs = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    const dayShorts = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
-    
-    for (let i = 0; i < days.length; i++) {
-      const dayValue = row[days[i]];
-      if (dayValue && dayValue.trim()) {
-        const parsed = parseTimeSlot(dayValue.trim());
-        if (parsed) {
-          schedule.push({
-            day: i,
-            dayName: dayNames[i],
-            dayAbbrev: dayAbbrevs[i],
-            dayShort: dayShorts[i],
-            ...parsed
-          });
-        }
-      }
-    }
-    
-    return schedule;
-  }
-  
-  function parseTimeSlot(value) {
-    const match = value.match(/(\d{1,2}):(\d{2})[_-](\d{1,2}):(\d{2})\s*(.*)?/);
-    if (!match) return null;
-    
-    const startHour = parseInt(match[1]);
-    const startMin = parseInt(match[2]);
-    const endHour = parseInt(match[3]);
-    const endMin = parseInt(match[4]);
-    const room = (match[5] || '').trim();
-    
-    return {
-      startTime: `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`,
-      endTime: `${endHour.toString().padStart(2, '0')}:${endMin.toString().padStart(2, '0')}`,
-      startMinutes: startHour * 60 + startMin,
-      endMinutes: endHour * 60 + endMin,
-      room
-    };
   }
   
   function handleKeyPress(e) {
@@ -163,6 +76,7 @@
     error = '';
     onStudentFound(null);
   }
+
 </script>
 
 <div class="card">

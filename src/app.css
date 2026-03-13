@@ -322,43 +322,43 @@ html, body {
   overflow-x: hidden;
 }
 
-/* Theme-aware text colors */
-.text-theme-primary {
-  color: var(--text-primary);
-}
+/* Theme-aware text colors, backgrounds, and borders */
+@layer components {
+  .text-theme-primary {
+    color: var(--text-primary);
+  }
 
-.text-theme-secondary {
-  color: var(--text-secondary);
-}
+  .text-theme-secondary {
+    color: var(--text-secondary);
+  }
 
-.text-theme-muted {
-  color: var(--text-muted);
-}
+  .text-theme-muted {
+    color: var(--text-muted);
+  }
 
-/* Theme-aware backgrounds */
-.bg-theme-primary {
-  background-color: var(--bg-primary);
-}
+  .bg-theme-primary {
+    background-color: var(--bg-primary);
+  }
 
-.bg-theme-secondary {
-  background-color: var(--bg-secondary);
-}
+  .bg-theme-secondary {
+    background-color: var(--bg-secondary);
+  }
 
-.bg-theme-tertiary {
-  background-color: var(--bg-tertiary);
-}
+  .bg-theme-tertiary {
+    background-color: var(--bg-tertiary);
+  }
 
-.bg-theme-elevated {
-  background-color: var(--bg-elevated);
-}
+  .bg-theme-elevated {
+    background-color: var(--bg-elevated);
+  }
 
-/* Theme-aware borders */
-.border-theme {
-  border-color: var(--border-default);
-}
+  .border-theme {
+    border-color: var(--border-default);
+  }
 
-.border-theme-subtle {
-  border-color: var(--border-subtle);
+  .border-theme-subtle {
+    border-color: var(--border-subtle);
+  }
 }
 
 /* Glow effects */

@@ -202,10 +202,11 @@
                 
                 <!-- Selection checkbox & sections count -->
                 <div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                  <div class="flex items-center gap-2" onclick={(e) => e.stopPropagation()} role="group">
+                  <div class="flex items-center gap-2">
                     <input
                       type="checkbox"
                       checked={selectedSubjectIds.has(subject.subjectId)}
+                      onclick={(e) => e.stopPropagation()}
                       onchange={() => toggleSubjectSelection(subject)}
                       class="custom-checkbox"
                       aria-label="Seleccionar materia"
@@ -232,15 +233,14 @@
                 <div class="border-t border-theme sm:hidden">
                   <div class="p-3 space-y-2">
                     {#each subject.sections as section}
-                      <div 
-                        class="p-4 rounded-xl border transition-all cursor-pointer
+                      <button 
+                        type="button"
+                        class="p-4 rounded-xl border transition-all text-left w-full focus:outline-none
                           {isSectionSelected(section.nrc) 
                             ? 'bg-accent-blue/10 border-accent-blue/50 shadow-glow' 
                             : 'bg-theme-tertiary border-theme hover:border-accent-blue/30'}"
                         onclick={() => toggleSectionSelection(section, subject)}
-                        onkeydown={(e) => e.key === 'Enter' && toggleSectionSelection(section, subject)}
-                        role="button"
-                        tabindex="0"
+                        onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleSectionSelection(section, subject)}
                       >
                         <div class="flex items-start justify-between gap-3">
                           <div class="flex-1 min-w-0">
@@ -290,7 +290,7 @@
                             {/if}
                           </div>
                         </div>
-                      </div>
+                      </button>
                     {/each}
                   </div>
                 </div>
@@ -314,10 +314,11 @@
                             {isSectionSelected(section.nrc) ? 'bg-accent-blue/5' : ''}"
                           onclick={() => toggleSectionSelection(section, subject)}
                         >
-                          <td class="p-4" onclick={(e) => e.stopPropagation()}>
+                          <td class="p-4">
                             <input
                               type="checkbox"
                               checked={isSectionSelected(section.nrc)}
+                              onclick={(e) => e.stopPropagation()}
                               onchange={() => toggleSectionSelection(section, subject)}
                               class="custom-checkbox-sm"
                             />
