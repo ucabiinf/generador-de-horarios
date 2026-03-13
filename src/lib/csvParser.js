@@ -1,4 +1,103 @@
 import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
+
+/**
+ * Parse the Proyecciones Excel file (student subjects)
+ * The file is an XLSX and the data is in the sheet named "Poblaciones (semesterId)"
+ * @param {File} file The Excel file
+ * @param {string} semesterId The semester ID (e.g., 202625)
+ */
+export async function parseProjectionsExcel(file, semesterId) {
+  try {
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const sheetName = `Poblaciones (${semesterId})`;
+    
+    if (!workbook.SheetNames.includes(sheetName)) {
+      throw new Error(`No se encontró la hoja "${sheetName}" en el archivo Excel. Hojas disponibles: ${workbook.SheetNames.join(', ')}`);
+    }
+    
+    const sheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(sheet);
+    
+    if (!jsonData || jsonData.length === 0) {
+      throw new Error(`La hoja "${sheetName}" está vacía.`);
+    }
+
+    const studentMap = new Map(); // studentId -> student data
+
+    for (const row of jsonData) {
+      // Try to get student ID from various column names
+      const studentId = String(
+        row['studentId'] ||
+        row['CEDULA'] ||
+        row['Cedula'] ||
+        row['ID'] ||
+        ''
+      ).trim();
+
+      if (!studentId || studentId.length < 5) continue;
+
+      // Get subject info
+      const subjectId = String(
+        row['subjectId'] ||
+        row['CODIGO_MATERIA'] ||
+        row['Codigo Materia'] ||
+        row['MATERIA'] ||
+        ''
+      ).trim();
+
+      const subjectName = String(
+        row['subjectName'] ||
+        row['NOMBRE_MATERIA'] ||
+        row['Nombre Materia'] ||
+        row['DESCRIPCION_MATERIA'] ||
+        ''
+      ).trim();
+
+      const credits = parseInt(row['subjectCredits'] || row['CREDITOS'] || row['UC_BASE'] || row['Credits']) || 3;
+
+      if (!subjectId) continue;
+
+      // Initialize student if not exists
+      if (!studentMap.has(studentId)) {
+        // Parse semester: "08SE" -> 8
+        let semesterVal = row['semesterLocation'] || row['SEMESTRE'] || row['Semester Location'] || '1';
+        if (typeof semesterVal === 'string' && semesterVal.includes('SE')) {
+          semesterVal = parseInt(semesterVal.replace('SE', '')) || 1;
+        } else {
+          semesterVal = parseInt(semesterVal) || 1;
+        }
+
+        studentMap.set(studentId, {
+          studentId,
+          name: String(row['studentName'] || row['NOMBRE_ESTUDIANTE'] || row['Nombre Estudiante'] || row['NOMBRE_COMPLETO'] || 'Estudiante').trim(),
+          career: String(row['program'] || row['CARRERA_NOMBRE'] || row['Carrera'] || row['PROGRAMA'] || 'Ingeniería Informática').trim(),
+          gpa: parseFloat(String(row['averageGradePoints'] || row['PROMEDIO'] || row['GPA'] || '0').replace(',', '.')) || 0,
+          accumulatedCredits: parseInt(row['accumulatedCredits'] || row['CREDITOS_ACUMULADOS'] || row['Earned Credits']) || 0,
+          semester: semesterVal,
+          status: String(row['status'] || row['ESTADO'] || row['Status'] || 'Activo').trim(),
+          subjects: []
+        });
+      }
+
+      // Add subject if not duplicate
+      const student = studentMap.get(studentId);
+      if (!student.subjects.find(s => s.subjectId === subjectId)) {
+          student.subjects.push({
+          subjectId,
+          subjectName: subjectName || subjectId,
+          credits
+        });
+      }
+    }
+
+    return Array.from(studentMap.values());
+  } catch (error) {
+    console.error('Error al procesar Excel:', error);
+    throw new Error('Error al procesar el archivo Excel de proyecciones: ' + error.message);
+  }
+}
 
 /**
  * Parse the Proyecciones CSV (student subjects)

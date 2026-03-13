@@ -1,10 +1,11 @@
 <script>
-  import { parseProjectionsCSV, parseSectionsCSV } from '../csvParser';
+  import { parseProjectionsExcel, parseSectionsCSV } from '../csvParser';
   
   let { onDataLoaded = () => {} } = $props();
   
   let projectionsFile = $state(null);
   let offeringsFile = $state(null);
+  let semesterId = $state('202625');
   let isLoading = $state(false);
   let error = $state('');
   let successMessage = $state('');
@@ -23,8 +24,8 @@
   }
   
   async function handleSubmit() {
-    if (!projectionsFile || !offeringsFile) {
-      error = 'Por favor selecciona ambos archivos (Proyecciones y Oferta)';
+    if (!projectionsFile || !offeringsFile || !semesterId) {
+      error = 'Por favor selecciona ambos archivos y el ID del semestre';
       return;
     }
     
@@ -33,7 +34,7 @@
     
     try {
       const [students, sections] = await Promise.all([
-        parseProjectionsCSV(projectionsFile),
+        parseProjectionsExcel(projectionsFile, semesterId),
         parseSectionsCSV(offeringsFile)
       ]);
       
@@ -68,11 +69,26 @@
     </div>
     
     <div class="space-y-6">
+      <!-- Semester ID -->
+      <div class="flex flex-col gap-2">
+        <label for="semester-id" class="text-sm font-medium text-theme-primary flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          ID de Semestre (ej. 202625)
+        </label>
+        <input 
+          id="semester-id"
+          type="text" 
+          bind:value={semesterId} 
+          class="input-field"
+          placeholder="Ej: 202625"
+        />
+      </div>
+
       <!-- Projections File -->
       <div class="flex flex-col gap-2">
         <label for="projections-input" class="text-sm font-medium text-theme-primary flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-accent-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-          Archivo de Proyecciones (CSV)
+          Archivo de Proyecciones (XLSX)
         </label>
         <button 
           type="button"
@@ -82,7 +98,7 @@
         >
           <div class="input-field flex items-center justify-between border-dashed border-2 group-hover:border-accent-primary transition-colors">
             <span class={projectionsFile ? 'text-theme-primary' : 'text-theme-muted'}>
-              {projectionsFile ? projectionsFile.name : 'Seleccionar proyecciones.csv...'}
+              {projectionsFile ? projectionsFile.name : 'Seleccionar proyecciones.xlsx...'}
             </span>
             <span class="text-xs bg-theme-tertiary px-2 py-1 rounded-md text-theme-secondary">Explorar</span>
           </div>
@@ -91,7 +107,7 @@
           id="projections-input"
           bind:this={projectionsInput}
           type="file" 
-          accept=".csv" 
+          accept=".xlsx,.xls" 
           class="hidden" 
           onchange={handleProjectionsChange} 
         />
